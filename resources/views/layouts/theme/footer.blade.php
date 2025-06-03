@@ -1,0 +1,1 @@
+<p class="mb-0 footer-copyright">Copyright 2024 © test_test.com</p>
