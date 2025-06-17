@@ -21,7 +21,7 @@ class Purchases extends Component
     public $taxCart = 0, $itemsCart, $subtotalCart = 0, $totalCart = 0, $ivaCart = 0, $status = 'paid', $purchaseType = 'cash', $notes;
     public $supplier, $flete;
     public $search, $productSelected;
-
+    public $notreceived_orders;
     public function mount()
     {
         if (session()->has("purchase_cart")) {
@@ -36,9 +36,10 @@ class Purchases extends Component
 
     public function render()
     {
+        $start = Carbon::now()->setTimezone('America/Los_Angeles')->subDays(40)->format('Y-m-d');
+        $end = Carbon::now()->setTimezone('America/Los_Angeles')->addDays(1)->format('Y-m-d');
 
-        $this->supplier =  session('purchase_supplier', null);
-        $this->flete =  session('flete', 0);
+        $this->notreceived_orders = DB::Table('vw_quickbooks_purchase_orders_status')->whereRaw("received_state COLLATE utf8mb4_unicode_ci = 'Not Received' ")->whereBetween('TxnDate', [$start, $end])->get();
 
         $this->cart = $this->cart->sortBy('name');
         $this->taxCart = round($this->totalIVA(), 2);
@@ -90,9 +91,9 @@ class Purchases extends Component
     }
 
     //-------------------------------------------------------------------------//
-    //                  metodos locales del carrito 
+    //                  metodos locales del carrito
     //-------------------------------------------------------------------------//
-    /* puedes colocar toda la lógica siguiente en un trait 
+    /* puedes colocar toda la lógica siguiente en un trait
     o en un helper para hacerlo reutilizable en cualquier parte del proyecto */
     function AddProduct($product, $qty = 1)
     {
@@ -153,14 +154,14 @@ class Purchases extends Component
 
         //$newItem['flete'] = $this->getItemFlete($newItem['total'], $newItem['qty'], $cost);
 
-        //delete from cart       
+        //delete from cart
         $this->cart = $this->cart->reject(function ($product) use ($uid) {
             return $product['id'] === $uid;
         });
 
         $this->save();
 
-        //add item to cart           
+        //add item to cart
         $this->cart->push(Arr::add(
             $newItem,
             null,
@@ -191,14 +192,14 @@ class Purchases extends Component
 
         $newItem['total'] = round($newItem['qty'] * $newItem['cost'], 2);
 
-        //delete from cart       
+        //delete from cart
         $this->cart = $this->cart->reject(function ($product) use ($uid) {
             return $product['id'] === $uid;
         });
 
         $this->save();
 
-        //add item to cart           
+        //add item to cart
         $this->cart->push(Arr::add(
             $newItem,
             null,
@@ -228,14 +229,14 @@ class Purchases extends Component
 
             $newItem['total'] = round($newItem['qty'] * $newItem['cost'], 2);
 
-            //delete from cart       
+            //delete from cart
             $this->cart = $this->cart->reject(function ($product) use ($uid) {
                 return $product['id'] === $uid;
             });
 
             $this->save();
 
-            //add item to cart           
+            //add item to cart
             $this->cart->push(Arr::add($newItem,  null,  null));
         } else {
             $this->cart = $this->cart->reject(function ($product) use ($uid) {

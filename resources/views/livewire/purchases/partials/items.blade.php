@@ -13,28 +13,9 @@
                         <i class="search-icon" data-feather="user"></i>
                     </span>
                 </div>
-
-
-
             </div>
             <div class="col-sm-12 col-md-7 ">
                 <livewire:product-search>
-
-
-
-                    {{-- <button @if($totalCart>0)
-                        onclick="cancelSale()"
-                        @endif
-                        type="button" class="btn btn-outline-light-2x txt-dark"><i class="icon-trash"></i>
-                        Cancelar</button>
-                    <button onclick="initPartialPay()" type="button" class="btn btn-outline-light-2x txt-dark"><i
-                            class="icon-money"></i>
-                        Abonos</button>
-                    <button wire:click.prevent="printLast" type="button" class="btn btn-outline-light-2x txt-dark"><i
-                            class="icon-printer"></i>
-                        Última</button> --}}
-
-
             </div>
         </div>
     </div>

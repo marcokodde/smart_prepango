@@ -3,7 +3,7 @@
         <div>
             @include('livewire.purchases.partials.payConfirm')
         </div>
-        <div class="col-sm-12 col-md-3">
+        {{--  <div class="col-sm-12 col-md-3">
             <div class="card customer-sticky">
                 <div class="card-header card-no-border pb-3">
                     <div class="header-top border-bottom">
@@ -60,9 +60,53 @@
 
                 </div>
             </div>
-        </div>
-        <div class="col-sm-12 col-md-9">
-            @include('livewire.purchases.partials.items')
+        </div> --}}
+        <div class="col-sm-12 col-md-12">
+            <h2>Pending Purchase Orders</h2>
+            <table id="pending_purchases" class="table table-hover table-condensed table-striped table-bordered mytables" style="font-size:98%">
+                <thead>
+                <tr style="background-color:Lavender">
+                    <th>ID</th>
+                    <th>Date</th>
+                    <th>PO Number</th>
+                    <th>Vendor</th>
+                    <th>Ship To</th>
+                    <th>Status</th>
+                    <th>In Quickbooks</th>
+                    <th>Closeout</th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                </tr>
+                </thead>
+                @if(isset($notreceived_orders))
+                <tbody>
+                    @foreach($notreceived_orders as $po)
+                    <tr>
+                    <td>{{$po->id}}</td>
+                    <td>{{$po->TxnDate}}</td>
+                    <td>{{$po->RefNumber}}</td>
+                    <td>{{$po->VendorName}}</td>
+                    <td>{{$po->ShipToName}}</td>
+
+                        <td><a href="/purchaseorders/pdf/{{$po->id}}" class="btn btn-primary btn-sm"><i class="fa fa-check-square-o"></i> Receive</a></td>
+
+                    <td>{{strtoupper($po->in_quickbooks)}}</td>
+                    <td>{{($po->closeout == 0) ? 'NO' : 'YES'}}</td>
+                    <td class="text-center"><a href="/purchaseorders/pdf/{{$po->id}}" class="btn btn-success btn-sm"><i class="fa fa-info-circle"></i> Detail</a></td>
+
+                    <td class="text-center"><a href="/purchaseorders/pdf/{{$po->id}}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i> Edit</a></td>
+
+                    <td><a href="/purchaseorders/pdf/{{$po->id}}" class="btn btn-info btn-sm" data-toggle="tooltip" title="Download PDF"><i class="fa fa-file-pdf-o"></i> PDF</a></td>
+                    <td><a href="/purchaseorders/pdfDetail/{{$po->id}}" class="btn btn-primary btn-sm" data-toggle="tooltip" title="Download Detailed PDF"><i class="fa fa-file-pdf-o"></i> Detailed PDF</a></td>
+                    </tr>
+                    @endforeach
+                </tbody>
+                @endif
+            </table>
+
+             {{-- @include('livewire.purchases.partials.items') --}}
         </div>
     </div>
 
