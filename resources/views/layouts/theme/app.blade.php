@@ -64,8 +64,5 @@
 
     {{-- Custom scripts --}}
     @stack('my-scripts')
-
-
 </body>
-
 </html>

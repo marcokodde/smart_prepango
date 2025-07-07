@@ -22,6 +22,10 @@ class Purchases extends Component
     public $supplier, $flete;
     public $search, $productSelected;
     public $notreceived_orders;
+
+    public $selectedPoId = null;
+    public $showReceiveView = false;
+
     public function mount()
     {
         if (session()->has("purchase_cart")) {
@@ -36,7 +40,7 @@ class Purchases extends Component
 
     public function render()
     {
-        $start = Carbon::now()->setTimezone('America/Los_Angeles')->subDays(40)->format('Y-m-d');
+        $start = Carbon::now()->setTimezone('America/Los_Angeles')->subDays(90)->format('Y-m-d');
         $end = Carbon::now()->setTimezone('America/Los_Angeles')->addDays(1)->format('Y-m-d');
 
         $this->notreceived_orders = DB::Table('vw_quickbooks_purchase_orders_status')->whereRaw("received_state COLLATE utf8mb4_unicode_ci = 'Not Received' ")->whereBetween('TxnDate', [$start, $end])->get();
@@ -51,6 +55,78 @@ class Purchases extends Component
         return view('livewire.purchases.purchases', [
             'searchResults' => $this->searchProduct()
         ]);
+    }
+
+    public function showReceive($poId)
+    {
+        $this->selectedPoId = $poId;
+        $this->showReceiveView = true;
+    }
+
+    public function resetView()
+    {
+        $this->showReceiveView = false;
+        $this->selectedPoId = null;
+    }
+
+    public function receivePurchaseOrder($id, Request $request)
+    {
+        $errors = new MessageBag;
+        $po = Quickbooks_purchase_order::with('details')->find($id);
+        if ($request->isMethod('POST')) {
+
+            $input = $this->validate(request(), [
+                'rows.*.received' => 'sometimes|nullable|date',
+                'rows.*.received_quantity' => 'sometimes|nullable|integer',
+            ]);
+            $po = Quickbooks_purchase_order::find($id);
+
+            if (isset($input['rows'])) {
+                foreach ($input['rows'] as $rowId => $received) {
+                    //skip blanks
+                    if (!isset($received['received_quantity']) && isset($received['received'])) {
+                        $errors->add('rows.' . $rowId . '.received_quantity', 'received_quantity is required');
+                        continue;
+                    }
+                    if (!isset($received['received']) &&  isset($received['received_quantity'])) {
+                        $errors->add('rows.' . $rowId . '.received', 'received date: is required');
+                        continue;
+                        //->withErrors($errors);
+                    }
+
+                    $po_detail = Quickbooks_purchase_order_detail::find($rowId);
+
+                    if ($received['received_quantity'] == 0 or $received['received_quantity'] >= $po_detail->Quantity) {
+                        $po_detail->received = $received['received'];
+                        $po_detail->received_quantity = $received['received_quantity'];
+                        $po_detail->received_by = Auth::id();
+                        $po_detail->save();
+                    } elseif ($received['received_quantity'] > 0 and $received['received_quantity'] < $po_detail->Quantity) {
+                        $partial = $po_detail->replicate();
+                        $partial->Quantity = $received['received_quantity'];
+                        $partial->received = $received['received'];
+                        $partial->received_quantity = $received['received_quantity'];
+                        $partial->received_by = Auth::id();
+                        $partial->save();
+                        $po_detail->Quantity = $po_detail->Quantity - $received['received_quantity'];
+                        $po_detail->save();
+                    }
+                }
+            }
+            $data = ['po' => $po];
+
+            if (count($errors) > 0) {
+                return view('purchaseorders.receive')->with($data)->withErrors($errors);;
+            } else {
+                return view('purchaseorders.show')->with($data);
+            }
+
+            $whs_items = Dt_whs_item::whereIn('id', $po->details->pluck('whs_item_id')->toArray())->get();
+            info('dispatched whsitm updated', [$whs_items]);
+            ProcessWhsItems::dispatch($whs_items);
+        }
+        $data = ['po' => $po];
+        return view('purchaseorders.receive')->with($data);
     }
 
 

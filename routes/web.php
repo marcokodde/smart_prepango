@@ -19,7 +19,7 @@ use App\Livewire\Categories;
 use App\Livewire\SalesReport;
 use App\Livewire\AsignarPermisos;
 use App\Livewire\PurchasesReport;
-
+use App\Http\Controllers\PurchaseOrderController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DataController;
 use App\Livewire\AccountsReceivableReport;
@@ -69,6 +69,9 @@ Route::middleware('auth')->group(function () {
     Route::get('sales', Sales::class)->name('sales')->middleware('can:ventas');
 
     Route::get('purchases', Purchases::class)->name('purchases')->middleware('can:compras');
+    Route::match(['get', 'post'], 'purchaseorders/{id}/edit', [PurchaseOrderController::class, 'edit'])->name('purchaseorders.edit');
+    Route::match(['get', 'post'], 'purchaseorders/{id}/receive', [PurchaseOrderController::class, 'receivePurchaseOrder'])->name('purchaseorders.receive');
+
     Route::get('inventories', Inventory::class)->name('inventories')->middleware('can:inventarios');
 
 
